@@ -121,5 +121,5 @@ const char*		BMP_GetErrorDescription		();
 	}
 
 
-//#include"qdbmp.c"
+#include"qdbmp.c"
 #endif

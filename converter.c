@@ -51,29 +51,29 @@ int main(int argc, char *argv[]) {
     sprintf(src_path, "%s%s", "..\\", parameters.src_file);
     char dst_path[105];
     sprintf(dst_path, "%s%s", "..\\", parameters.dst_file);
-    int bits_per_pixel = return_bits_per_pixel(src_path);
+    int bits_per_pixel = return_bits_per_pixel(parameters.src_file);
     if (bits_per_pixel == -1) {
-        error("Cannot open file %s", src_path);
+        error("Cannot open file %s", parameters.src_file);
         return FILE_OPEN_ERROR;
     }
     if (strcmp(parameters.code_owner, "--mine") == 0) {
         if (bits_per_pixel == 24) {
             BMP_24 *image = malloc(sizeof(*image));
-            int loading_result = load_bmp_24(image, src_path);
+            int loading_result = load_bmp_24(image, parameters.src_file);
             if (loading_result != 0) {
                 return loading_result;
             }
-            int writing_result = write_negative_bmp_24(image, dst_path);
+            int writing_result = write_negative_bmp_24(image, parameters.dst_file);
             if (writing_result != 0) {
                 return writing_result;
             }
         } else if (bits_per_pixel == 8) {
             BMP_8 *image = malloc(sizeof(*image));
-            int loading_result = load_bmp_8(image, src_path);
+            int loading_result = load_bmp_8(image, parameters.src_file);
             if (loading_result != 0) {
                 return loading_result;
             }
-            int writing_result = write_negative_bmp_8(image, dst_path);
+            int writing_result = write_negative_bmp_8(image, parameters.dst_file);
             if (writing_result != 0) {
                 return writing_result;
             }
@@ -83,19 +83,28 @@ int main(int argc, char *argv[]) {
         }
     } else {
         unsigned char r, g, b;
-        BMP *bmp = BMP_ReadFile(src_path);
+        BMP *bmp = BMP_ReadFile(parameters.src_file);
         BMP_CHECK_ERROR(stderr, -1)
         unsigned long width = BMP_GetWidth(bmp);
         unsigned long height = BMP_GetWidth(bmp);
-        for (int x = 0; x < width; ++x) {
-            for (int y = 0; y < height; ++y) {
-                BMP_GetPixelRGB(bmp, x, y, &r, &g, &b);
-                BMP_SetPixelRGB(bmp, x, y, 255 - r, 255 - g, 255 - b);
+        if (bmp->Header.BitsPerPixel == 24) {
+            for (unsigned int x = 0; x < width; ++x) {
+                for (unsigned int y = 0; y < height; ++y) {
+                    BMP_GetPixelRGB(bmp, x, y, &r, &g, &b);
+                    BMP_SetPixelRGB(bmp, x, y, 255 - r, 255 - g, 255 - b);
+                }
+            }
+        } else if (bmp->Header.BitsPerPixel == 8) {
+            for (long long int i = 0; i < BMP_PALETTE_SIZE_8bpp; i++) {
+                if ((i + 1) % 4 != 0) {
+                    bmp->Palette[i] = ~bmp->Palette[i];
+                }
             }
         }
-        BMP_WriteFile(bmp, dst_path);
+        BMP_WriteFile(bmp, parameters.dst_file);
         BMP_CHECK_ERROR(stderr, -1)
-        //BMP_Free(bmp);
+        BMP_Free(bmp);
+        
     }
     return 0;
 }
