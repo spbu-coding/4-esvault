@@ -83,7 +83,7 @@ int load_bmp_24(BMP_24 *image, char const *filename) {
             return MEMORY_ALLOCATION_ERROR;
         }
     }
-    int padding = count_padding(info_header.biWidth);
+    size_t padding = count_padding(info_header.biWidth);
     BYTE padding_zero;
     for (int i = 0; i < info_header.biHeight; ++i) {
         for (int j = 0; j < info_header.biWidth; ++j) {
@@ -118,7 +118,7 @@ int write_negative_bmp_24(BMP_24 *image, char const *filename) {
         error("Some bytes of BITMAPINFOHEADER were not written");
         exit(BYTES_READING_ERROR);
     }
-    int padding = count_padding(image->info_header.biWidth);
+    size_t padding = count_padding(image->info_header.biWidth);
     BYTE padding_zero = 0x00;
     PIXEL negative_pixel;
     for (int i = 0; i < image->info_header.biHeight; ++i) {
@@ -176,13 +176,13 @@ int load_bmp_8(BMP_8 *image, char const *filename) {
         }
     }
     BYTE zero_byte;
-    for (int i = 0; i < image->info_header.biClrUsed; ++i) {
+    for (size_t i = 0; i < image->info_header.biClrUsed; ++i) {
         if (fread(&image->palette[i], sizeof(BYTE), 3, input) != 3) {
             error("Some bytes of palette were not read");
             return BYTES_READING_ERROR;
         }
         if (fread(&zero_byte, sizeof(BYTE), 1, input) != 1) {
-            error("0x00 byte after %d-th node in palette was nor read", i);
+            error("0x00 byte after %lu-th node in palette was nor read", i);
             return BYTES_READING_ERROR;
         }
     }
@@ -213,14 +213,14 @@ int write_negative_bmp_8(BMP_8 *image, char const *filename) {
         error("Some bytes of BITMAPINFOHEADER were not written");
         return BYTES_READING_ERROR;
     }
-    for (int i = 0; i < image->info_header.biClrUsed; ++i) {
+    for (size_t i = 0; i < image->info_header.biClrUsed; ++i) {
         PIXEL color = {~image->palette[i].r, ~image->palette[i].g, ~image->palette[i].b};
         if (fwrite(&color, sizeof(PIXEL), 1, output) != 1) {
             error("Some bytes of palette were not written");
             return BYTES_READING_ERROR;
         }
         if (fwrite(&zero_byte, sizeof(BYTE), 1, output) != 1) {
-            error("0x00 byte after %d-th node in palette was nor written", i);
+            error("0x00 byte after %lu-th node in palette was nor written", i);
             return BYTES_READING_ERROR;
         }
     }

@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
             if (compare_result != 0) {
                 return compare_result;
             }
+            printf("%s, %s are equal\n", argv[1], argv[2]);
         } else if (bit_count1 == 24) {
             BMP_24 *image1 = malloc(sizeof(*image1));
             BMP_24 *image2 = malloc(sizeof(*image2));
@@ -41,6 +42,7 @@ int main(int argc, char *argv[]) {
             if (compare_result != 0) {
                 return compare_result;
             }
+            printf("%s, %s are equal\n", argv[1], argv[2]);
         }
     }
     return 0;

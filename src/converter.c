@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
             for (unsigned int x = 0; x < width; ++x) {
                 for (unsigned int y = 0; y < height; ++y) {
                     BMP_GetPixelRGB(bmp, x, y, &r, &g, &b);
-                    BMP_SetPixelRGB(bmp, x, y, 255 - r, 255 - g, 255 - b);
+                    BMP_SetPixelRGB(bmp, x, y, ~r, ~g, ~b);
                 }
             }
         } else if (bmp->Header.BitsPerPixel == 8) {
