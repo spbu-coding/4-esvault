@@ -73,5 +73,7 @@ int return_bits_per_pixel(char const *filename);
 int compare_pixels(PIXEL a, PIXEL b);
 int compare_bmp8(BMP_8 *image1, BMP_8 *image2);
 int compare_bmp24(BMP_24 *image1, BMP_24 *image2);
+void free_bmp8(BMP_8 *image);
+void free_bmp24(BMP_24 *image);
 
 #endif //HW4_BMP_H

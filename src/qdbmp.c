@@ -2,33 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**************************************************************
-	QDBMP - Quick n' Dirty BMP
-	v1.0.0 - 2007-04-07
-	http://qdbmp.sourceforge.net
-	The library supports the following BMP variants:
-	1. Uncompressed 32 BPP (alpha values are ignored)
-	2. Uncompressed 24 BPP
-	3. Uncompressed 8 BPP (indexed color)
-	QDBMP is free and open source software, distributed
-	under the MIT licence.
-	Copyright (c) 2007 Chai Braudo (braudo@users.sourceforge.net)
-	Permission is hereby granted, free of charge, to any person obtaining a copy
-	of this software and associated documentation files (the "Software"), to deal
-	in the Software without restriction, including without limitation the rights
-	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-	copies of the Software, and to permit persons to whom the Software is
-	furnished to do so, subject to the following conditions:
-	The above copyright notice and this permission notice shall be included in
-	all copies or substantial portions of the Software.
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-	THE SOFTWARE.
-**************************************************************/
 
 /* Bitmap header */
 typedef struct _BMP_Header
@@ -39,8 +12,8 @@ typedef struct _BMP_Header
     USHORT		Reserved2;			/* Reserved */
     UINT		DataOffset;			/* Offset of image data relative to the file's start */
     UINT		HeaderSize;			/* Size of the header in bytes */
-    long int		Width;				/* Bitmap's width */
-    long int		Height;				/* Bitmap's height */
+    UINT		Width;				/* Bitmap's width */
+    UINT		Height;				/* Bitmap's height */
     USHORT		Planes;				/* Number of color planes in the bitmap */
     USHORT		BitsPerPixel;		/* Number of bits per pixel */
     UINT		CompressionType;	/* Compression type */
@@ -235,7 +208,7 @@ BMP* BMP_ReadFile( const char* filename )
 {
     BMP*	bmp;
     FILE*	f;
-    UINT	palettesize=0;
+    UINT	palettesize = 0;
 
     if ( filename == NULL )
     {
@@ -261,7 +234,6 @@ BMP* BMP_ReadFile( const char* filename )
         free( bmp );
         return NULL;
     }
-
 
     /* Read header */
     if ( ReadHeader( bmp, f ) != BMP_OK || bmp->Header.Magic != 0x4D42 )
@@ -324,7 +296,6 @@ BMP* BMP_ReadFile( const char* filename )
         free( bmp );
         return NULL;
     }
-
 
     /* Read image data */
     if ( fread( bmp->Data, sizeof( UCHAR ), bmp->Header.ImageDataSize, f ) != bmp->Header.ImageDataSize )
@@ -463,7 +434,7 @@ USHORT BMP_GetDepth( BMP* bmp )
 	Populates the arguments with the specified pixel's RGB
 	values.
 **************************************************************/
-void BMP_GetPixelRGB( BMP* bmp, long int x, long int y, UCHAR* r, UCHAR* g, UCHAR* b )
+void BMP_GetPixelRGB( BMP* bmp, UINT x, UINT y, UCHAR* r, UCHAR* g, UCHAR* b )
 {
     UCHAR*	pixel;
     UINT	bytes_per_row;
@@ -503,7 +474,7 @@ void BMP_GetPixelRGB( BMP* bmp, long int x, long int y, UCHAR* r, UCHAR* g, UCHA
 /**************************************************************
 	Sets the specified pixel's RGB values.
 **************************************************************/
-void BMP_SetPixelRGB( BMP* bmp, long int x, long int y, UCHAR r, UCHAR g, UCHAR b )
+void BMP_SetPixelRGB( BMP* bmp, UINT x, UINT y, UCHAR r, UCHAR g, UCHAR b )
 {
     UCHAR*	pixel;
     UINT	bytes_per_row;
@@ -542,7 +513,7 @@ void BMP_SetPixelRGB( BMP* bmp, long int x, long int y, UCHAR r, UCHAR g, UCHAR 
 /**************************************************************
 	Gets the specified pixel's color index.
 **************************************************************/
-void BMP_GetPixelIndex( BMP* bmp, long int x, long int y, UCHAR* val )
+void BMP_GetPixelIndex( BMP* bmp, UINT x, UINT y, UCHAR* val )
 {
     UCHAR*	pixel;
     UINT	bytes_per_row;
@@ -590,7 +561,7 @@ void BMP_GetPixelIndex( BMP* bmp, long int x, long int y, UCHAR* val )
 /**************************************************************
 	Sets the specified pixel's color index.
 **************************************************************/
-void BMP_SetPixelIndex( BMP* bmp, long int x, long int y, UCHAR val )
+void BMP_SetPixelIndex( BMP* bmp, UINT x, UINT y, UCHAR val )
 {
     UCHAR*	pixel;
     UINT	bytes_per_row;
@@ -748,8 +719,8 @@ int	ReadHeader( BMP* bmp, FILE* f )
     if ( !ReadUSHORT( &( bmp->Header.Reserved2 ), f ) )		return BMP_IO_ERROR;
     if ( !ReadUINT( &( bmp->Header.DataOffset ), f ) )		return BMP_IO_ERROR;
     if ( !ReadUINT( &( bmp->Header.HeaderSize ), f ) )		return BMP_IO_ERROR;
-    //if ( !ReadUINT( &( (UINT)bmp->Header.Width ), f ) )			return BMP_IO_ERROR;
-    //if ( !ReadUINT( &( (UINT)bmp->Header.Height ), f ) )			return BMP_IO_ERROR;
+    if ( !ReadUINT( &( bmp->Header.Width ), f ) )			return BMP_IO_ERROR;
+    if ( !ReadUINT( &( bmp->Header.Height ), f ) )			return BMP_IO_ERROR;
     if ( !ReadUSHORT( &( bmp->Header.Planes ), f ) )		return BMP_IO_ERROR;
     if ( !ReadUSHORT( &( bmp->Header.BitsPerPixel ), f ) )	return BMP_IO_ERROR;
     if ( !ReadUINT( &( bmp->Header.CompressionType ), f ) )	return BMP_IO_ERROR;
@@ -874,4 +845,4 @@ int	WriteUSHORT( USHORT x, FILE* f )
     little[ 0 ] = (UCHAR)( ( x & 0x00ff ) >> 0 );
 
     return ( f && fwrite( little, 2, 1, f ) == 1 );
-}
+};

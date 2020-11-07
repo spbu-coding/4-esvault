@@ -310,3 +310,18 @@ int compare_bmp24(BMP_24 *image1, BMP_24 *image2) {
     }
     return 0;
 }
+
+void free_bmp8(BMP_8 *image) {
+    free(image->palette);
+    for (int i = 0; i < image->info_header.biHeight; ++i) {
+        free(image->data[i]);
+    }
+    free(image->data);
+}
+
+void free_bmp24(BMP_24 *image) {
+    for (int i = 0; i < image->info_header.biHeight; ++i) {
+        free(image->data[i]);
+    }
+    free(image->data);
+}

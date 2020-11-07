@@ -96,10 +96,10 @@ USHORT			BMP_GetDepth				( BMP* bmp );
 
 
 /* Pixel access */
-void			BMP_GetPixelRGB				( BMP* bmp, long int x, long int y, UCHAR* r, UCHAR* g, UCHAR* b );
-void			BMP_SetPixelRGB				( BMP* bmp, long int x, long int y, UCHAR r, UCHAR g, UCHAR b );
-void			BMP_GetPixelIndex			( BMP* bmp, long int x, long int y, UCHAR* val );
-void			BMP_SetPixelIndex			( BMP* bmp, long int x, long int y, UCHAR val );
+void			BMP_GetPixelRGB				( BMP* bmp, UINT x, UINT y, UCHAR* r, UCHAR* g, UCHAR* b );
+void			BMP_SetPixelRGB				( BMP* bmp, UINT x, UINT y, UCHAR r, UCHAR g, UCHAR b );
+void			BMP_GetPixelIndex			( BMP* bmp, UINT x, UINT y, UCHAR* val );
+void			BMP_SetPixelIndex			( BMP* bmp, UINT x, UINT y, UCHAR val );
 
 
 /* Palette handling */

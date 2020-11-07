@@ -61,23 +61,28 @@ int main(int argc, char *argv[]) {
             BMP_24 *image = malloc(sizeof(*image));
             int loading_result = load_bmp_24(image, parameters.src_file);
             if (loading_result != 0) {
+                free_bmp24(image);
                 return loading_result;
             }
             int writing_result = write_negative_bmp_24(image, parameters.dst_file);
             if (writing_result != 0) {
+                free_bmp24(image);
                 return writing_result;
             }
+            free_bmp24(image);
         } else if (bits_per_pixel == 8) {
             BMP_8 *image = malloc(sizeof(*image));
             int loading_result = load_bmp_8(image, parameters.src_file);
             if (loading_result != 0) {
+                free_bmp8(image);
                 return loading_result;
             }
             int writing_result = write_negative_bmp_8(image, parameters.dst_file);
             if (writing_result != 0) {
+                free_bmp8(image);
                 return writing_result;
             }
-        } else {
+            free_bmp8(image);        } else {
             error("Format is not supported");
             return -1;
         }
@@ -104,7 +109,6 @@ int main(int argc, char *argv[]) {
         BMP_WriteFile(bmp, parameters.dst_file);
         BMP_CHECK_ERROR(stderr, -1)
         BMP_Free(bmp);
-        
     }
     return 0;
 }
