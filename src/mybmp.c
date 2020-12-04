@@ -2,6 +2,8 @@
 
 #define error(...) (fprintf(stderr, __VA_ARGS__))
 
+#define MAX_DEVIATION_COUNT 100
+
 int read_bitmapfileheader(BITMAPFILEHEADER *bitmapfileheader, FILE *fin) {
     if (fread(bitmapfileheader, 14, 1, fin) != 1) {
         error("Some bytes of BITMAPFILEHEADER were not read");
@@ -32,7 +34,7 @@ int read_bitmapinfoheader(BITMAPINFOHEADER *bitmapinfoheader, FILE *fin) {
         return WIDTH_ERROR;
     }
     if (bitmapinfoheader->biHeight == 0) {
-        error("Error in height (position 16, must not be 0)");
+        error("Error in height (must not be equal 0)");
         return HEIGHT_ERROR;
     }
     if (bitmapinfoheader->biPlanes != 0x01) {
@@ -71,13 +73,13 @@ int load_bmp_24(BMP_24 *image, char const *filename) {
     if (correctness_info_header != 0) {
         return correctness_info_header;
     }
-    PIXEL **data = (PIXEL **)malloc(sizeof(PIXEL *) * info_header.biHeight);
+    PIXEL **data = (PIXEL **) malloc(sizeof(PIXEL *) * abs(info_header.biHeight));
     if (data == NULL) {
         error("Cannot allocate memory for pixels data");
         return MEMORY_ALLOCATION_ERROR;
     }
     for (int i = 0; i < info_header.biHeight; ++i) {
-        data[i] = (PIXEL *)malloc(sizeof(PIXEL) * info_header.biWidth);
+        data[i] = (PIXEL *) malloc(sizeof(PIXEL) * info_header.biWidth);
         if (data[i] == NULL) {
             error("Cannot allocate memory for %d-th pixel row", i);
             return MEMORY_ALLOCATION_ERROR;
@@ -163,7 +165,7 @@ int load_bmp_8(BMP_8 *image, char const *filename) {
         error("Cannot allocate memory for palette");
         return MEMORY_ALLOCATION_ERROR;
     }
-    image->data = malloc(sizeof(PIXEL *) * image->info_header.biHeight);
+    image->data = malloc(sizeof(PIXEL *) * abs(image->info_header.biHeight));
     if (image->data == NULL) {
         error("Cannot allocate memory for pixels data");
         return MEMORY_ALLOCATION_ERROR;
@@ -182,12 +184,12 @@ int load_bmp_8(BMP_8 *image, char const *filename) {
             return BYTES_READING_ERROR;
         }
         if (fread(&zero_byte, sizeof(BYTE), 1, input) != 1) {
-            error("0x00 byte after %lu-th node in palette was nor read", i);
+            error("0x00 byte after %zu-th node in palette was nor read", i);
             return BYTES_READING_ERROR;
         }
     }
     for (int i = 0; i < image->info_header.biHeight; ++i) {
-        for  (int j = 0; j < image->info_header.biWidth; ++j) {
+        for (int j = 0; j < image->info_header.biWidth; ++j) {
             if (fread(&image->data[i][j], sizeof(BYTE), 1, input) != 1) {
                 error("Some bytes of pixels data were not read");
                 return BYTES_READING_ERROR;
@@ -224,7 +226,7 @@ int write_negative_bmp_8(BMP_8 *image, char const *filename) {
             return BYTES_READING_ERROR;
         }
     }
-    for(int i = 0; i < image->info_header.biHeight; ++i) {
+    for (int i = 0; i < image->info_header.biHeight; ++i) {
         for (int j = 0; j < image->info_header.biWidth; ++j) {
             if (fwrite(&image->data[i][j], sizeof(BYTE), 1, output) != 1) {
                 error("Some bytes of pixels data were not written");
@@ -239,7 +241,8 @@ int write_negative_bmp_8(BMP_8 *image, char const *filename) {
 int return_bits_per_pixel(char const *filename) {
     FILE *input = fopen(filename, "rb");
     if (input == NULL) {
-        return -1;
+        error("Can not open file: %s", filename);
+        return FILE_OPEN_ERROR;
     }
     fseek(input, 28, SEEK_SET);
     int bits = 0;
@@ -262,20 +265,21 @@ int compare_bmp8(BMP_8 *image1, BMP_8 *image2) {
         error("Images have different width");
         return -1;
     }
-    if (height1 != height2) {
+    if (abs(height1) != abs(height2)) {
         error("Images have different height");
         return -1;
     }
     BYTE **data1 = image1->data;
     BYTE **data2 = image2->data;
     int deviation_counter = 0;
-    for (int i = 0; i < height1; ++i) {
-        for (int j = 0; j < width1; ++j) {
-            if (deviation_counter < 100) {
-                if (data1[i][j] != data2[i][j]) {
-                    deviation_counter ++;
-                    printf("%d %d", data1[i][j], data2[i][j]);
-                }
+    int abs_height = abs(height1);
+    for (int i = 0; i < abs_height && deviation_counter >= MAX_DEVIATION_COUNT; ++i) {
+        for (int j = 0; j < width1 && deviation_counter >= MAX_DEVIATION_COUNT; ++j) {
+            int y_coord_1 = height1 > 0 ? i : abs_height - i - 1;
+            int y_coord_2 = height2 > 0 ? i : abs_height - i - 1;
+            if (compare_pixels(image1->palette[data1[y_coord_1][j]], image2->palette[data2[y_coord_2][j]]) != 0) {
+                deviation_counter++;
+                printf("%d %d", i, j);
             }
         }
     }
@@ -291,20 +295,21 @@ int compare_bmp24(BMP_24 *image1, BMP_24 *image2) {
         error("Images have different width");
         return -1;
     }
-    if (height1 != height2) {
+    if (abs(height1) != abs(height2)) {
         error("Images have different height");
         return -1;
     }
     PIXEL **data1 = image1->data;
     PIXEL **data2 = image2->data;
     int deviation_counter = 0;
-    for (int i = 0; i < height1; ++i) {
-        for (int j = 0; j < width1; ++j) {
-            if (deviation_counter < 100) {
-                if (compare_pixels(data1[i][j], data2[i][j])) {
-                    deviation_counter++;
-                    printf("%d %d\n", i, j);
-                }
+    int abs_height = abs(height1);
+    for (int i = 0; i < abs_height && deviation_counter >= MAX_DEVIATION_COUNT; ++i) {
+        for (int j = 0; j < width1 && deviation_counter >= MAX_DEVIATION_COUNT; ++j) {
+            int y_coord_1 = height1 > 0 ? i : abs_height - i - 1;
+            int y_coord_2 = height2 > 0 ? i : abs_height - i - 1;
+            if (compare_pixels(data1[y_coord_1][j], data2[y_coord_2][j]) != 0) {
+                deviation_counter++;
+                printf("%d %d", i, j);
             }
         }
     }
